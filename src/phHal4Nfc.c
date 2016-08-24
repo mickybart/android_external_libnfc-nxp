@@ -307,17 +307,36 @@ phHal4Nfc_Configure_Layers(
 #include <dlfcn.h>
 
 #define FW_PATH "/vendor/firmware/libpn544_fw.so"
+#define FW_PATH_C2 "/vendor/firmware/libpn544_fw_c2.so"
+#define FW_PATH_C3 "/vendor/firmware/libpn544_fw_c3.so"
+
+#define FW_TYPE_C2 167
+#define FW_TYPE_C3 177
 
 const unsigned char *nxp_nfc_full_version = NULL;
 const unsigned char *nxp_nfc_fw = NULL;
 
-int dlopen_firmware() {
+int dlopen_firmware(int fw_type) {
     void *p;
 
     void *handle = dlopen(FW_PATH, RTLD_NOW);
     if (handle == NULL) {
         ALOGE("Could not open %s", FW_PATH);
-        return -1;
+        if (fw_type == FW_TYPE_C2) {
+            handle = dlopen(FW_PATH_C2, RTLD_NOW);
+            if (handle == NULL) {
+                ALOGE("Could not open %s", FW_PATH_C2);
+                return -1;
+            }
+        } else if (fw_type == FW_TYPE_C3) {
+            handle = dlopen(FW_PATH_C3, RTLD_NOW);
+            if (handle == NULL) {
+                ALOGE("Could not open %s", FW_PATH_C3);
+                return -1;
+            }
+        } else {
+            return -1;
+        }
     }
 
     p = dlsym(handle, "nxp_nfc_full_version");
@@ -372,10 +391,6 @@ NFCSTATUS phHal4Nfc_Open(
     }
     else/*Do an initialization*/
     { 
-#ifdef ANDROID
-        dlopen_firmware();
-#endif
-
         /*If hal4 ctxt in Hwreference is NULL create a new context*/
         if(NULL == ((phHal_sHwReference_t *)psHwReference)->hal_context)
         {

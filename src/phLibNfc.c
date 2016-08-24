@@ -47,7 +47,7 @@
 *************************** Macro's  ******************************************
 */
 
-extern int dlopen_firmware();
+extern int dlopen_firmware(int);
 
 #ifndef STATIC_DISABLE
 #define STATIC static
@@ -122,10 +122,17 @@ NFCSTATUS phLibNfc_Download_Mode ()
    return phDal4Nfc_Download();
 }
 
+int phLibNfc_Get_Firmware_Type ()
+{
+    if (!gpphLibContext || !gpphLibContext->psHwReference)
+        return -1;
+    return gpphLibContext->psHwReference->device_info.fw_version >> 16;
+}
+
 int phLibNfc_Load_Firmware_Image ()
 {
     int status;
-    status = dlopen_firmware();
+    status = dlopen_firmware(phLibNfc_Get_Firmware_Type());
     return status;
 }
 
@@ -879,6 +886,11 @@ NFCSTATUS phLibNfc_Mgt_GetstackCapabilities(
             gpphLibContext->psHwReference->device_info.model_id;        
         (void)memcpy(phLibNfc_StackCapabilities->psDevCapabilities.full_version,
             gpphLibContext->psHwReference->device_info.full_version,NXP_FULL_VERSION_LEN);
+
+#ifdef ANDROID
+        phLibNfc_Load_Firmware_Image();
+#endif
+
         /* Check the firmware version */
         if (nxp_nfc_full_version == NULL) {
             // Couldn't load firmware, just pretend we're up to date.
