@@ -854,6 +854,8 @@ NFCSTATUS phLibNfc_HW_Reset ();
 
 NFCSTATUS phLibNfc_Download_Mode ();
 
+int phLibNfc_Get_Firmware_Type ();
+
 int phLibNfc_Load_Firmware_Image ();
 
 // Function for delay the recovery in case wired mode is set
